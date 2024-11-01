@@ -11,9 +11,12 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: 'https://e-workspace-peach.vercel.app/',
-    credentials: true,
-}));    
+    origin: ['https://e-workspace-peach.vercel.app', 'http://localhost:3000'], // Add localhost if testing locally
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: "*",
+    credentials: true
+}));
+   
 app.use(bodyParser.json());
 
 // Routes
