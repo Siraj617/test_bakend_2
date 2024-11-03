@@ -28,41 +28,44 @@ exports.addSkills = async (req, res) => {
 };
 
 
-const getquestionsFromCloud = async (userdetails) => {
+
+const getQuestionsFromCloud = async (userDetails) => {
   const questions = [];
 
-  for (let i = 0; i < userdetails.length; i++) {
-      const { skill, level } = userdetails[i];
-      
-      
-      const skillPath = skill.toLowerCase() // Convert skill to lowercase and replace spaces with hyphens
-      const levelPath = level.toLowerCase();
-      console.log(skillPath, levelPath, "skill level")
+  for (const { skill, level } of userDetails) {
+    const skillPath = skill.toLowerCase();
+    const levelPath = level.toLowerCase();
 
-      try {
-          const response = await axios.get(`https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`, {
-              headers: {
-                  'Authorization': `token ${process.env.GITHUB_TOKEN}`,
-                  'Accept': 'application/vnd.github.v3.raw' // To get the raw content
-              }
-          }); 
+    try {
+      const response = await axios.get(
+        `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
+          },
+        }
+      );
 
-          if (response.status === 200 && response.data) {
-              const retrievedQuestions = response.data;
-              console.log(retrievedQuestions, "retrievedQuestions")
-             
+      if (response.status === 200) {
+        let retrievedQuestions = response.data;
 
-              questions.push({
-                  skill,
-                  level,
-                  questions: retrievedQuestions
-              });
+        // Decode if needed
+        if (typeof retrievedQuestions === 'string') {
+          retrievedQuestions = JSON.parse(
+            Buffer.from(retrievedQuestions, 'base64').toString('utf-8')
+          );
+        }
 
-             
-          }
-      } catch (error) {
-          console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
+        questions.push({
+          skill,
+          level,
+          questions: retrievedQuestions,
+        });
       }
+    } catch (error) {
+      console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
+    }
   }
 
   return questions;
@@ -88,7 +91,7 @@ exports.getQuestions = async (req, res) => {
 
             console.log(user.skills);
 
-            const questions = await getquestionsFromCloud(user.skills);
+            const questions = await getQuestionsFromCloud(user.skills);
             console.log(questions, "cloud questions")
             
             res.status(200).json({ questions:questions });
