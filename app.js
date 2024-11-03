@@ -10,14 +10,29 @@ const skillRoutes = require('./routes/skillRoutes');
 const app = express();
 
 // Middleware
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: "*",
-    credentials: true
-}));
-
+const corsOptions = {
+    origin: ['https://e-workspace-peach.vercel.app', 'http://localhost:3000'],
+    credentials: true,
+};
+app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    const allowedOrigins = ['https://e-workspace-peach.vercel.app', 'http://localhost:3000'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, csrf-token');
+    next();
+});
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the API root endpoint');
+});
 
 // Routes
 app.use('/api/skills', skillRoutes);
@@ -41,9 +56,7 @@ app.get('/api/getDailyTasks/today', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => {
-    res.send('Welcome to the API root endpoint');
-});
+
 
 // Connect to MongoDB
 mongoose.connect(config.dbUri, { useNewUrlParser: true, useUnifiedTopology: true })
