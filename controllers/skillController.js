@@ -35,7 +35,7 @@ const getQuestionsFromCloud = async (userDetails) => {
   for (const { skill, level } of userDetails) {
     const skillPath = skill.toLowerCase();
     const levelPath = level.toLowerCase();
-    const url = `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`;
+    const url = `https://api.github.com/repos/mohamedsiraj20104/questionBank/contents/${skillPath}/${levelPath}/questions.json`;
 
     try {
       console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
@@ -44,7 +44,7 @@ const getQuestionsFromCloud = async (userDetails) => {
 
       const response = await axios.get(url, {
         headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Authorization: `Bearer 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`,
           Accept: 'application/vnd.github.v3.raw',
         },
       });
