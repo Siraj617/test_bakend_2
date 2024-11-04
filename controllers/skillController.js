@@ -13,12 +13,6 @@ const FcmToken = require('../model/fcmTokenModel')
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: "dgipgstvo",
-  api_key: "948166186923696",
-  api_secret: "Nyh6YRpK1HUreOdhDxvSkzI6K-w"
-});
 
 exports.addSkills = async (req, res) => {
     const { user, skills } = req.body;
@@ -38,6 +32,7 @@ exports.addSkills = async (req, res) => {
 
 
 const getQuestionsFromCloud = async (userDetails) => {
+  
   const questions = [];
 
   for (const { skill, level } of userDetails) {
@@ -45,6 +40,13 @@ const getQuestionsFromCloud = async (userDetails) => {
     const folderPath = `${skill.toLowerCase()}/${level.toLowerCase()}`;
 
     try {
+      // Configure Cloudinary
+      cloudinary.config({
+        cloud_name: "dgipgstvo",
+        api_key: "948166186923696",
+        api_secret: "Nyh6YRpK1HUreOdhDxvSkzI6K-w"
+      });
+
       console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
 
       // List all JSON files in the specified Cloudinary folder
