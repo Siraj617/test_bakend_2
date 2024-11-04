@@ -10,7 +10,15 @@ const DailyTasks = require('../model/Getdailytask')
 const axios = require('axios');
 const Savenotes = require('../model/SaveNotes');
 const FcmToken = require('../model/fcmTokenModel')
-require('dotenv').config()
+const cloudinary = require('cloudinary').v2;
+require('dotenv').config();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: "dgipgstvo",
+  api_key: "948166186923696",
+  api_secret: "Nyh6YRpK1HUreOdhDxvSkzI6K-w"
+});
 
 exports.addSkills = async (req, res) => {
     const { user, skills } = req.body;
@@ -33,48 +41,47 @@ const getQuestionsFromCloud = async (userDetails) => {
   const questions = [];
 
   for (const { skill, level } of userDetails) {
-    const skillPath = skill.toLowerCase();
-    const levelPath = level.toLowerCase();
-    const url = `https://api.github.com/repos/mohamedsiraj20104/questionBank/contents/${skillPath}/${levelPath}/questions.json`;
+    // Use skill and level dynamically to create the Cloudinary folder path
+    const folderPath = `${skill.toLowerCase()}/${level.toLowerCase()}`;
 
     try {
       console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
-      console.log(`Using GitHub username: ${process.env.GITHUB_USERNAME}`);
-      console.log(`Using GitHub token: ${process.env.GITHUB_TOKEN.slice(0, 4)}...`); // Masking the token
 
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer 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`,
-          Accept: 'application/vnd.github.v3.raw',
-        },
+      // List all JSON files in the specified Cloudinary folder
+      const result = await cloudinary.api.resources({
+        type: 'upload',
+        prefix: folderPath, // Dynamic folder path
+        resource_type: 'raw',
+        max_results: 500,
       });
 
-      if (response.status === 200) {
-        let retrievedQuestions = response.data;
+      // Filter to get only .json files
+      const jsonFiles = result.resources.filter(file => file.url.endsWith('.json'));
 
-        // Decode if needed
-        if (typeof retrievedQuestions === 'string') {
-          retrievedQuestions = JSON.parse(
-            Buffer.from(retrievedQuestions, 'base64').toString('utf-8')
-          );
+      for (const file of jsonFiles) {
+        // Fetch the content of each JSON file
+        const response = await axios.get(file.secure_url);
+
+        if (response.status === 200) {
+          const retrievedQuestions = response.data;
+
+          questions.push({
+            skill,
+            level,
+            questions: retrievedQuestions,
+          });
+
+          console.log(`Successfully retrieved questions for ${skill} at ${level} level.`);
+        } else {
+          const errorResponse = {
+            skill,
+            level,
+            message: `Failed to fetch questions: Received status code ${response.status}`,
+            statusCode: response.status,
+          };
+          console.error(errorResponse);
+          return errorResponse;
         }
-
-        questions.push({
-          skill,
-          level,
-          questions: retrievedQuestions,
-        });
-
-        console.log(`Successfully retrieved ${retrievedQuestions.length} questions for ${skill} at ${level} level.`);
-      } else {
-        const errorResponse = {
-          skill,
-          level,
-          message: `Failed to fetch questions: Received status code ${response.status}`,
-          statusCode: response.status,
-        };
-        console.error(errorResponse);
-        return errorResponse; // Returning error as an object
       }
     } catch (error) {
       const errorResponse = {
@@ -88,11 +95,11 @@ const getQuestionsFromCloud = async (userDetails) => {
         fullError: error,
       };
       console.error(errorResponse);
-      return errorResponse; // Returning error as an object
+      return errorResponse;
     }
   }
 
-  return questions; // Return the questions if successful
+  return questions;
 };
 
 
