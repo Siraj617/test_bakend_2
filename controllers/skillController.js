@@ -45,7 +45,7 @@ const getQuestionsFromCloud = async (userDetails) => {
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
+          Accept: 'application/vnd.github.v3.raw',
         },
       });
 
@@ -67,21 +67,34 @@ const getQuestionsFromCloud = async (userDetails) => {
 
         console.log(`Successfully retrieved ${retrievedQuestions.length} questions for ${skill} at ${level} level.`);
       } else {
-        console.error(`Failed to fetch questions for ${skill} at ${level} level: Received status code ${response.status}`);
+        const errorResponse = {
+          skill,
+          level,
+          message: `Failed to fetch questions: Received status code ${response.status}`,
+          statusCode: response.status,
+        };
+        console.error(errorResponse);
+        return errorResponse; // Returning error as an object
       }
     } catch (error) {
-      console.error(`Error retrieving questions for ${skill} at ${level} level:`);
-      console.error(`  Requested URL: ${url}`);
-      console.error(`  Error message: ${error.message}`);
-      console.error(`  Error code: ${error.code || 'N/A'}`);
-      console.error(`  Response data: ${error.response ? JSON.stringify(error.response.data) : 'N/A'}`);
-      console.error(`  Status code: ${error.response ? error.response.status : 'N/A'}`);
-      console.error(`  Full error object:`, error);
+      const errorResponse = {
+        skill,
+        level,
+        message: `Error retrieving questions for ${skill} at ${level} level.`,
+        errorMessage: error.message,
+        errorCode: error.code || 'N/A',
+        responseData: error.response ? error.response.data : 'N/A',
+        statusCode: error.response ? error.response.status : 'N/A',
+        fullError: error,
+      };
+      console.error(errorResponse);
+      return errorResponse; // Returning error as an object
     }
   }
 
-  return questions;
+  return questions; // Return the questions if successful
 };
+
 
 
 
