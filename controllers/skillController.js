@@ -35,19 +35,17 @@ const getQuestionsFromCloud = async (userDetails) => {
   for (const { skill, level } of userDetails) {
     const skillPath = skill.toLowerCase();
     const levelPath = level.toLowerCase();
+    const url = `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`;
 
     try {
       console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
       
-      const response = await axios.get(
-        `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-            Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
-          },
-        }
-      );
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
+        },
+      });
 
       if (response.status === 200) {
         let retrievedQuestions = response.data;
@@ -66,11 +64,17 @@ const getQuestionsFromCloud = async (userDetails) => {
         });
 
         console.log(`Successfully retrieved ${retrievedQuestions.length} questions for ${skill} at ${level} level.`);
+      } else {
+        console.error(`Failed to fetch questions for ${skill} at ${level} level: Received status code ${response.status}`);
       }
     } catch (error) {
-      console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
-      // Optionally log the full error object for more details
-      console.error('Full error details:', error);
+      console.error(`Error retrieving questions for ${skill} at ${level} level:`);
+      console.error(`  Requested URL: ${url}`);
+      console.error(`  Error message: ${error.message}`);
+      console.error(`  Error code: ${error.code || 'N/A'}`);
+      console.error(`  Response data: ${error.response ? JSON.stringify(error.response.data) : 'N/A'}`);
+      console.error(`  Status code: ${error.response ? error.response.status : 'N/A'}`);
+      console.error(`  Full error object:`, error);
     }
   }
 
