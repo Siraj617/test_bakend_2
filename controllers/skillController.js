@@ -10,9 +10,7 @@ const DailyTasks = require('../model/Getdailytask')
 const axios = require('axios');
 const Savenotes = require('../model/SaveNotes');
 const FcmToken = require('../model/fcmTokenModel')
-const cloudinary = require('cloudinary').v2;
-require('dotenv').config();
-
+require('dotenv').config()
 
 exports.addSkills = async (req, res) => {
     const { user, skills } = req.body;
@@ -32,79 +30,46 @@ exports.addSkills = async (req, res) => {
 
 
 const getQuestionsFromCloud = async (userDetails) => {
-  
   const questions = [];
 
   for (const { skill, level } of userDetails) {
-    // Use skill and level dynamically to create the Cloudinary folder path
-    const folderPath = `${skill.toLowerCase()}/${level.toLowerCase()}`;
+    const skillPath = skill.toLowerCase();
+    const levelPath = level.toLowerCase();
 
     try {
-      // Configure Cloudinary
-      cloudinary.config({
-        cloud_name: "dgipgstvo",
-        api_key: "948166186923696",
-        api_secret: "Nyh6YRpK1HUreOdhDxvSkzI6K-w"
-      });
-
-      console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
-
-      // List all JSON files in the specified Cloudinary folder
-      const result = await cloudinary.api.resources({
-        type: 'upload',
-        prefix: folderPath, // Dynamic folder path
-        resource_type: 'raw',
-        max_results: 500,
-      });
-
-      // Filter to get only .json files
-      const jsonFiles = result.resources.filter(file => file.url.endsWith('.json'));
-
-      for (const file of jsonFiles) {
-        // Fetch the content of each JSON file
-        const response = await axios.get(file.secure_url);
-
-        if (response.status === 200) {
-          const retrievedQuestions = response.data;
-
-          questions.push({
-            skill,
-            level,
-            questions: retrievedQuestions,
-          });
-
-          console.log(`Successfully retrieved questions for ${skill} at ${level} level.`);
-        } else {
-          const errorResponse = {
-            skill,
-            level,
-            message: `Failed to fetch questions: Received status code ${response.status}`,
-            statusCode: response.status,
-          };
-          console.error(errorResponse);
-          return errorResponse;
+      const response = await axios.get(
+        `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
+          },
         }
+      );
+
+      if (response.status === 200) {
+        let retrievedQuestions = response.data;
+
+        // Decode if needed
+        if (typeof retrievedQuestions === 'string') {
+          retrievedQuestions = JSON.parse(
+            Buffer.from(retrievedQuestions, 'base64').toString('utf-8')
+          );
+        }
+
+        questions.push({
+          skill,
+          level,
+          questions: retrievedQuestions,
+        });
       }
     } catch (error) {
-      const errorResponse = {
-        skill,
-        level,
-        message: `Error retrieving questions for ${skill} at ${level} level.`,
-        errorMessage: error.message,
-        errorCode: error.code || 'N/A',
-        responseData: error.response ? error.response.data : 'N/A',
-        statusCode: error.response ? error.response.status : 'N/A',
-        fullError: error,
-      };
-      console.error(errorResponse);
-      return errorResponse;
+      console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
     }
   }
 
   return questions;
 };
-
-
 
 
 exports.getQuestions = async (req, res) => {
