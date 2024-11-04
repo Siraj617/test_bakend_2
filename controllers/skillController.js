@@ -39,7 +39,9 @@ const getQuestionsFromCloud = async (userDetails) => {
 
     try {
       console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
-      
+      console.log(`Using GitHub username: ${process.env.GITHUB_USERNAME}`);
+      console.log(`Using GitHub token: ${process.env.GITHUB_TOKEN.slice(0, 4)}...`); // Masking the token
+
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
@@ -80,6 +82,7 @@ const getQuestionsFromCloud = async (userDetails) => {
 
   return questions;
 };
+
 
 
 exports.getQuestions = async (req, res) => {
