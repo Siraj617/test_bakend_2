@@ -37,6 +37,8 @@ const getQuestionsFromCloud = async (userDetails) => {
     const levelPath = level.toLowerCase();
 
     try {
+      console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
+      
       const response = await axios.get(
         `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`,
         {
@@ -62,9 +64,13 @@ const getQuestionsFromCloud = async (userDetails) => {
           level,
           questions: retrievedQuestions,
         });
+
+        console.log(`Successfully retrieved ${retrievedQuestions.length} questions for ${skill} at ${level} level.`);
       }
     } catch (error) {
       console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
+      // Optionally log the full error object for more details
+      console.error('Full error details:', error);
     }
   }
 
