@@ -10,7 +10,15 @@ const DailyTasks = require('../model/Getdailytask')
 const axios = require('axios');
 const Savenotes = require('../model/SaveNotes');
 const FcmToken = require('../model/fcmTokenModel')
-require('dotenv').config()
+require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: "dgipgstvo",
+  api_key: "948166186923696",
+  api_secret: "Nyh6YRpK1HUreOdhDxvSkzI6K-w"
+});
+
 
 exports.addSkills = async (req, res) => {
     const { user, skills } = req.body;
@@ -33,35 +41,40 @@ const getQuestionsFromCloud = async (userDetails) => {
   const questions = [];
 
   for (const { skill, level } of userDetails) {
-    const skillPath = skill.toLowerCase();
-    const levelPath = level.toLowerCase();
+    // Convert skill and level to lowercase for folder paths
+    const folderPath = `${skill.toLowerCase()}/${level.toLowerCase()}`;
 
     try {
-      const response = await axios.get(
-        `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/questionBank/contents/${skillPath}/${levelPath}/questions.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-            Accept: 'application/vnd.github.v3.raw', // Directly retrieves the raw content
-          },
+      console.log(`Fetching questions for skill: ${skill}, level: ${level}`);
+
+      // List all JSON files in the specified Cloudinary folder
+      const result = await cloudinary.api.resources({
+        type: 'upload',
+        prefix: folderPath, // Use dynamic folder path
+        resource_type: 'raw',
+        max_results: 500,
+      });
+
+      // Filter to get only .json files
+      const jsonFiles = result.resources.filter(file => file.url.endsWith('.json'));
+
+      for (const file of jsonFiles) {
+        // Fetch the content of each JSON file
+        const response = await axios.get(file.secure_url);
+
+        if (response.status === 200) {
+          const retrievedQuestions = response.data;
+
+          questions.push({
+            skill,
+            level,
+            questions: retrievedQuestions,
+          });
+
+          console.log(`Successfully retrieved questions for ${skill} at ${level} level.`);
+        } else {
+          console.error(`Failed to fetch questions: Received status code ${response.status}`);
         }
-      );
-
-      if (response.status === 200) {
-        let retrievedQuestions = response.data;
-
-        // Decode if needed
-        if (typeof retrievedQuestions === 'string') {
-          retrievedQuestions = JSON.parse(
-            Buffer.from(retrievedQuestions, 'base64').toString('utf-8')
-          );
-        }
-
-        questions.push({
-          skill,
-          level,
-          questions: retrievedQuestions,
-        });
       }
     } catch (error) {
       console.error(`Error retrieving questions for ${skill} at ${level} level:`, error.message);
