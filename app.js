@@ -39,7 +39,7 @@ app.use(bodyParser.json());
 
 app.use('/api/skills', skillRoutes);
 app.use('/api/startinterview/', skillRoutes);
-app.use('/api/SaveCode/', skillRoutes)
+app.use('/api/SaveCode', skillRoutes)
 app.use('/api/getSavedCode/', skillRoutes)
 // app.use('/api/start-interview/', skillRoutes)
 app.use('/api/preBookedUser/', skillRoutes)
