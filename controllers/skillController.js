@@ -10,8 +10,10 @@ const DailyTasks = require('../model/Getdailytask')
 const axios = require('axios');
 const Savenotes = require('../model/SaveNotes');
 const FcmToken = require('../model/fcmTokenModel')
+const CourseDetails = require('../model/courseDetails');
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+
 
 cloudinary.config({
   cloud_name: "dgipgstvo",
@@ -508,4 +510,93 @@ exports.CheckBookingID = async (req, res) => {
         console.error('Error saving FCM token:', error);
         return res.status(500).json({ message: 'Internal server error.' });
     }
+};
+
+
+exports.getCourseDetails = async (req, res) => {
+  console.log('hello');
+  try {
+    // Fetch all documents in the CourseDetails collection
+    const courseDetails = await CourseDetails.find(); // Fetching all documents
+
+    // Debugging: Check what courseDetails contains
+    console.log('Fetched course details:', courseDetails);
+
+    // Check if the courseDetails array is empty
+    if (!courseDetails || courseDetails.length === 0) {
+      return res.status(404).json({ error: 'No course data found' });
+    }
+
+    // Initialize the final structure
+    const finalStructure = {
+      categories: {}
+    };
+
+    // Loop through each document (course data) returned by the find query
+    courseDetails.forEach(document => {
+      // Access the actual data using the _doc field
+      const data = document._doc;
+
+      // Loop through each category (e.g., 'Web Development', 'Data Science')
+      Object.keys(data).forEach(categoryName => {
+        // Skip the _id field
+        if (categoryName === '_id') return;
+
+        const categoryData = data[categoryName];
+
+        // Log categoryData to check its structure
+        console.log(`Category: ${categoryName}`, categoryData);
+
+        // Make sure categoryData is not null or undefined
+        if (!categoryData || typeof categoryData !== 'object') {
+          console.error(`Invalid category data for ${categoryName}`);
+          return; // Skip invalid data
+        }
+
+        // Initialize the structure for each category if it doesn't exist
+        if (!finalStructure.categories[categoryName]) {
+          finalStructure.categories[categoryName] = {
+            subcategories: categoryData.subcategories || [],
+            courses: {}
+          };
+        }
+
+        // Check for valid subcategories and courses
+        if (Array.isArray(categoryData.subcategories)) {
+          finalStructure.categories[categoryName].subcategories = categoryData.subcategories;
+        }
+
+        // Loop through each subcategory and map the courses
+        if (categoryData.courses && typeof categoryData.courses === 'object') {
+          Object.keys(categoryData.courses).forEach(subcategoryName => {
+            const courses = categoryData.courses[subcategoryName];
+
+            // Check if courses are valid
+            if (Array.isArray(courses)) {
+              // Add each subcategory with its courses array
+              finalStructure.categories[categoryName].courses[subcategoryName] = courses.map(course => {
+                return {
+                  title: course.title,
+                  instructor: course.instructor,
+                  rating: course.rating,
+                  reviews: course.reviews,
+                  price: course.price,
+                  originalPrice: course.originalPrice,
+                  imgSrc: course.imgSrc
+                };
+              });
+            }
+          });
+        } else {
+          console.error(`Invalid courses data for ${categoryName}`);
+        }
+      });
+    });
+
+    // Send the final structured JSON as a response
+    res.json(finalStructure);
+  } catch (error) {
+    console.error('Error fetching and structuring course data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
