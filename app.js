@@ -10,10 +10,28 @@ const skillRoutes = require('./routes/skillRoutes');
 const app = express();
 
 // Middleware
-app.use(cors({
-    origin: 'http://localhost:3000',
+const corsOptions = {
+    origin: ['https://e-workspace-peach.vercel.app', 'http://localhost:3000'],
     credentials: true,
-}));    
+};
+app.use(cors(corsOptions));
+app.use(cookieParser());
+
+app.use((req, res, next) => {
+    const allowedOrigins = ['https://e-workspace-peach.vercel.app', 'http://localhost:3000'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, csrf-token');
+    next();
+});
+app.get('/', (req, res) => {
+    res.send('Welcome to the API root endpoint');
+});
+
 app.use(bodyParser.json());
 
 // Routes
