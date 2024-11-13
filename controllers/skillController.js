@@ -11,6 +11,7 @@ const axios = require('axios');
 const Savenotes = require('../model/SaveNotes');
 const FcmToken = require('../model/fcmTokenModel')
 const CourseDetails = require('../model/courseDetails');
+const Postcourse = require('../model/Postcourse');
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 
@@ -606,16 +607,16 @@ exports.addCourseDetails = async (req, res) => {
     const courseData = req.body; // Expecting data in the specified format
 
     // Initialize a new CourseDetails document
-    const newCourseDetails = new CourseDetails({ categories: {} });
+    const newCourseDetails = new Postcourse({ categories: {} });
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
-      
+
       // Add the category to the new document's categories map
       newCourseDetails.categories.set(categoryName, {
         subcategories: categoryData.subcategories || [],
-        courses: {}
+        courses: new Map() // Initialize the courses map
       });
 
       // Process each subcategory and its courses
@@ -623,7 +624,7 @@ exports.addCourseDetails = async (req, res) => {
         const courses = categoryData.courses[subcategoryName];
 
         // Map each course to the schema's structure
-        newCourseDetails.categories.get(categoryName).courses[subcategoryName] = courses.map(course => ({
+        newCourseDetails.categories.get(categoryName).courses.set(subcategoryName, courses.map(course => ({
           title: course.title,
           instructor: course.instructor,
           rating: course.rating,
@@ -631,7 +632,7 @@ exports.addCourseDetails = async (req, res) => {
           price: course.price,
           originalPrice: course.originalPrice,
           imgSrc: course.imgSrc
-        }));
+        })));
       });
     });
 
@@ -644,4 +645,3 @@ exports.addCourseDetails = async (req, res) => {
     res.status(500).json({ error: 'Failed to add course data' });
   }
 };
-
