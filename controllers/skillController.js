@@ -609,9 +609,40 @@ exports.addCourseDetails = async (req, res) => {
     // Initialize a new CourseDetails document
     const newCourseDetails = new Postcourse();
 
-    // Directly insert the course data without adding the 'categories' parent object
-    // Assuming `courseData` structure matches your expected payload format
-    newCourseDetails.categories = courseData; // Directly assign the payload to categories
+    // Initialize categories as an empty object if it's not already initialized
+    newCourseDetails.categories = {};
+
+    // Loop through each category in the payload
+    Object.keys(courseData).forEach(categoryName => {
+      const categoryData = courseData[categoryName];
+
+      // Initialize subcategories and courses under each category
+      const categoryCourses = {
+        subcategories: categoryData.subcategories || [],
+        courses: {} // Initialize an empty object for courses grouped by subcategory
+      };
+
+      // Process each subcategory and its courses
+      categoryData.subcategories.forEach(subcategoryName => {
+        const coursesInSubcategory = categoryData.courses[subcategoryName] || [];
+
+        // Store courses under their respective subcategory
+        categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
+          title: course.title,
+          instructor: course.instructor,
+          rating: course.rating,
+          reviews: course.reviews,
+          price: course.price,
+          originalPrice: course.originalPrice,
+          imgSrc: course.imgSrc,
+          documentURL: course.documentURL, // New field for document URL
+          createdDate: new Date() // Automatically set the created date to current date
+        }));
+      });
+
+      // Add the formatted category and courses to the newCourseDetails object
+      newCourseDetails.categories[categoryName] = categoryCourses; // Use object syntax instead of Map.set
+    });
 
     // Save the new document to the database
     await newCourseDetails.save();
