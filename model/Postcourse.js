@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Define course schema for each course
 const courseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   instructor: { type: String, required: true },
@@ -10,14 +11,16 @@ const courseSchema = new mongoose.Schema({
   imgSrc: { type: String }
 });
 
+// Define subcategory schema to contain an array of subcategory names and a Map of courses
 const subcategorySchema = new mongoose.Schema({
-  subcategories: { type: [String] },
+  subcategories: { type: [String], default: [] },
   courses: { 
-    type: Map, 
+    type: Map,
     of: [courseSchema] // each subcategory has an array of courses
   }
 });
 
+// Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
   categories: {
     type: Map,
@@ -25,6 +28,6 @@ const courseDetailsSchema = new mongoose.Schema({
   }
 });
 
+// Create and export the CourseDetails model
 const CourseDetails = mongoose.model('CourseDetails', courseDetailsSchema);
-
 module.exports = CourseDetails;
