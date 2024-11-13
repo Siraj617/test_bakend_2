@@ -632,13 +632,13 @@ exports.addCourseDetails = async (req, res) => {
           price: course.price,
           originalPrice: course.originalPrice,
           imgSrc: course.imgSrc,
-          documentURL: course.documentURL || "", // Add the new documentURL field
-          createdDate: new Date() // Add the createdDate field with the current date
+          documentURL: course.documentURL, // New field for document URL
+          createdDate: new Date() // Automatically set the created date to current date
         }));
       });
 
       // Add the formatted category and courses to the newCourseDetails object
-      newCourseDetails.categories[categoryName] = categoryCourses;
+      newCourseDetails.categories[categoryName] = categoryCourses; // Use object syntax instead of Map.set
     });
 
     // Save the new document to the database
