@@ -609,24 +609,21 @@ exports.addCourseDetails = async (req, res) => {
     // Initialize a new CourseDetails document
     const newCourseDetails = new Postcourse();
 
-    // Initialize an empty object to store the categories data
-    const categoriesData = {};
-
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
 
-      // Initialize courses object for each category
+      // Initialize subcategories and courses under each category
       const categoryCourses = {
-        subcategories: categoryData.subcategories || [],  // Array of subcategories
+        subcategories: categoryData.subcategories || [],
         courses: {} // Initialize an empty object for courses grouped by subcategory
       };
 
-      // Loop through each subcategory to process the courses
+      // Process each subcategory and its courses
       categoryData.subcategories.forEach(subcategoryName => {
         const coursesInSubcategory = categoryData.courses[subcategoryName] || [];
 
-        // Map each course to its respective subcategory
+        // Store courses under their respective subcategory
         categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
           title: course.title,
           instructor: course.instructor,
@@ -635,17 +632,14 @@ exports.addCourseDetails = async (req, res) => {
           price: course.price,
           originalPrice: course.originalPrice,
           imgSrc: course.imgSrc,
-          documentURL: course.documentURL, // New field for document URL
-          createdDate: new Date() // Automatically set the created date to current date
+          documentURL: course.documentURL || "", // Add the new documentURL field
+          createdDate: new Date() // Add the createdDate field with the current date
         }));
       });
 
-      // Store the formatted category data under the category name in categoriesData
-      categoriesData[categoryName] = categoryCourses;
+      // Add the formatted category and courses to the newCourseDetails object
+      newCourseDetails.categories[categoryName] = categoryCourses;
     });
-
-    // Set the categoriesData to the Postcourse model object
-    newCourseDetails.set({ categories: categoriesData });
 
     // Save the new document to the database
     await newCourseDetails.save();
