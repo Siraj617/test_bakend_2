@@ -15,19 +15,19 @@ const courseSchema = new mongoose.Schema({
 const subcategorySchema = new mongoose.Schema({
   subcategories: { type: [String], default: [] },
   courses: { 
-    type: Map,
-    of: [courseSchema] // each subcategory has an array of courses
+    type: [courseSchema], // Changed Map to Array of courseSchema
+    required: true
   }
 });
 
 // Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
   categories: {
-    type: Map,
-    of: subcategorySchema // each category has subcategories and courses
+    type: Object,  // Use Object instead of Map for categories
+    required: true
   }
 });
 
 // Create and export the CourseDetails model
-const CourseDetails = mongoose.model('CourseDetails', courseDetailsSchema);
-module.exports = CourseDetails;
+const Postcourse = mongoose.model('Postcourse', courseDetailsSchema);
+module.exports = Postcourse;
