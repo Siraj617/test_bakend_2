@@ -8,7 +8,9 @@ const courseSchema = new mongoose.Schema({
   reviews: { type: Number, default: 0 },
   price: { type: Number, required: true },
   originalPrice: { type: Number },
-  imgSrc: { type: String }
+  imgSrc: { type: String },
+  documentURL: { type: String },  // New field for document URL
+  createdDate: { type: Date, default: Date.now }  // New field for created date
 });
 
 // Define subcategory schema to contain an array of subcategory names and a Map of courses
