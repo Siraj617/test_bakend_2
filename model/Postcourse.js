@@ -13,15 +13,24 @@ const courseSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now }  // New field for created date
 });
 
+// Define subcategory schema to contain an array of subcategory names and a Map of courses
+const subcategorySchema = new mongoose.Schema({
+  subcategories: { type: [String], default: [] },
+  courses: { 
+    type: [courseSchema], // Changed Map to Array of courseSchema
+    required: true
+  }
+});
+
 // Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
-  WebDevelopment: {
-    subcategories: { type: [String], default: [] },
-    courses: { type: Object, required: true }
-  },
-  createdDate: { type: Date, default: Date.now }  // Make sure createdDate is included here
+  categories: {
+    type: Object,  // Use Object instead of Map for categories
+    required: true
+  }
 });
 
 // Create and export the CourseDetails model
 const Postcourse = mongoose.model('Postcourse', courseDetailsSchema);
 module.exports = Postcourse;
+
