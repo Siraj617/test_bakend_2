@@ -19,7 +19,7 @@ router.post('/scoreMyAnswer', skillController.AiService);
 router.post('/Savenotes', skillController.saveNote);
 router.post('/Getnotes', skillController.getNotesByUser);
 router.post('/save-token', skillController.saveFcmToken);
-router.post('/course-details', courseController.addCourseDetails);
+router.post('/course-details', skillController.addCourseDetails);
 
 // PUT Routes
 router.put('/editNote/:id', skillController.editNote);
