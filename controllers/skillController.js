@@ -613,26 +613,28 @@ exports.addCourseDetails = async (req, res) => {
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
 
-      // Add the category to the new document's categories map
-      newCourseDetails.categories.set(categoryName, {
+      // Initialize categories as an object instead of Map
+      newCourseDetails.categories[categoryName] = {
         subcategories: categoryData.subcategories || [],
-        courses: new Map() // Initialize the courses map
-      });
+        courses: [] // Initialize courses as an array
+      };
 
       // Process each subcategory and its courses
       Object.keys(categoryData.courses).forEach(subcategoryName => {
         const courses = categoryData.courses[subcategoryName];
 
-        // Map each course to the schema's structure
-        newCourseDetails.categories.get(categoryName).courses.set(subcategoryName, courses.map(course => ({
-          title: course.title,
-          instructor: course.instructor,
-          rating: course.rating,
-          reviews: course.reviews,
-          price: course.price,
-          originalPrice: course.originalPrice,
-          imgSrc: course.imgSrc
-        })));
+        // Add each course to the courses array in the category
+        courses.forEach(course => {
+          newCourseDetails.categories[categoryName].courses.push({
+            title: course.title,
+            instructor: course.instructor,
+            rating: course.rating,
+            reviews: course.reviews,
+            price: course.price,
+            originalPrice: course.originalPrice,
+            imgSrc: course.imgSrc
+          });
+        });
       });
     });
 
