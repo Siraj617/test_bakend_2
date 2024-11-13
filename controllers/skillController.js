@@ -609,6 +609,9 @@ exports.addCourseDetails = async (req, res) => {
     // Initialize a new CourseDetails document
     const newCourseDetails = new Postcourse();
 
+    // Initialize categories as an empty object if it's not already initialized
+    newCourseDetails.categories = {};
+
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
@@ -650,3 +653,4 @@ exports.addCourseDetails = async (req, res) => {
     res.status(500).json({ error: 'Failed to add course data' });
   }
 };
+
