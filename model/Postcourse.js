@@ -25,11 +25,11 @@ const subcategorySchema = new mongoose.Schema({
 // Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
   categories: {
-    type: Object,  // Use Object instead of Map for categories
+    type: Object,  // Use Object to store dynamic categories as keys
     required: true
   }
 });
 
-// Create and export the CourseDetails model
+// Create and export the Postcourse model
 const Postcourse = mongoose.model('Postcourse', courseDetailsSchema);
 module.exports = Postcourse;
