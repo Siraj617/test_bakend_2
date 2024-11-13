@@ -609,24 +609,24 @@ exports.addCourseDetails = async (req, res) => {
     // Initialize a new CourseDetails document
     const newCourseDetails = new Postcourse();
 
-    // Initialize newCourseDetails as an empty object
+    // Initialize an empty object to store the categories data
     const categoriesData = {};
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
 
-      // Initialize subcategories and courses under each category
+      // Initialize courses object for each category
       const categoryCourses = {
-        subcategories: categoryData.subcategories || [],
+        subcategories: categoryData.subcategories || [],  // Array of subcategories
         courses: {} // Initialize an empty object for courses grouped by subcategory
       };
 
-      // Process each subcategory and its courses
+      // Loop through each subcategory to process the courses
       categoryData.subcategories.forEach(subcategoryName => {
         const coursesInSubcategory = categoryData.courses[subcategoryName] || [];
 
-        // Store courses under their respective subcategory
+        // Map each course to its respective subcategory
         categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
           title: course.title,
           instructor: course.instructor,
@@ -640,12 +640,12 @@ exports.addCourseDetails = async (req, res) => {
         }));
       });
 
-      // Add the formatted category and courses directly to the categoriesData object
+      // Store the formatted category data under the category name in categoriesData
       categoriesData[categoryName] = categoryCourses;
     });
 
-    // Set the formatted categories data directly to the newCourseDetails object
-    newCourseDetails.set(categoriesData);
+    // Set the categoriesData to the Postcourse model object
+    newCourseDetails.set({ categories: categoriesData });
 
     // Save the new document to the database
     await newCourseDetails.save();
