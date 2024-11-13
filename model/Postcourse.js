@@ -13,19 +13,14 @@ const courseSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now }  // New field for created date
 });
 
-// Define subcategory schema to contain an array of subcategory names and a Map of courses
-const subcategorySchema = new mongoose.Schema({
-  subcategories: { type: [String], default: [] },
-  courses: { 
-    type: [courseSchema], // Changed Map to Array of courseSchema
-    required: true
-  }
-});
-
 // Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
   categories: {
-    type: Object,  // Use Object instead of Map for categories
+    type: Map,  // Use Map instead of Object for categories
+    of: {
+      subcategories: { type: [String], default: [] },
+      courses: { type: Object, required: true }  // Store courses under subcategories as objects
+    },
     required: true
   }
 });
