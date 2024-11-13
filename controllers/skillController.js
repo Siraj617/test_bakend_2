@@ -607,7 +607,9 @@ exports.addCourseDetails = async (req, res) => {
     const courseData = req.body; // Expecting data in the specified format
 
     // Initialize a new CourseDetails document
-    const newCourseDetails = new Postcourse();
+    const newCourseDetails = new Postcourse({
+      categories: new Map() // Initialize the categories as an empty Map
+    });
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
@@ -648,4 +650,3 @@ exports.addCourseDetails = async (req, res) => {
     res.status(500).json({ error: 'Failed to add course data' });
   }
 };
-
