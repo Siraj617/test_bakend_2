@@ -607,35 +607,36 @@ exports.addCourseDetails = async (req, res) => {
     const courseData = req.body; // Expecting data in the specified format
 
     // Initialize a new CourseDetails document
-    const newCourseDetails = new Postcourse({ categories: {} });
+    const newCourseDetails = new Postcourse();
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
       const categoryData = courseData[categoryName];
 
-      // Initialize categories as an object instead of Map
-      newCourseDetails.categories[categoryName] = {
+      // Initialize subcategories and courses under each category
+      const categoryCourses = {
         subcategories: categoryData.subcategories || [],
-        courses: [] // Initialize courses as an array
+        courses: {} // Initialize an empty object for courses grouped by subcategory
       };
 
       // Process each subcategory and its courses
-      Object.keys(categoryData.courses).forEach(subcategoryName => {
-        const courses = categoryData.courses[subcategoryName];
+      categoryData.subcategories.forEach(subcategoryName => {
+        const coursesInSubcategory = categoryData.courses[subcategoryName] || [];
 
-        // Add each course to the courses array in the category
-        courses.forEach(course => {
-          newCourseDetails.categories[categoryName].courses.push({
-            title: course.title,
-            instructor: course.instructor,
-            rating: course.rating,
-            reviews: course.reviews,
-            price: course.price,
-            originalPrice: course.originalPrice,
-            imgSrc: course.imgSrc
-          });
-        });
+        // Store courses under their respective subcategory
+        categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
+          title: course.title,
+          instructor: course.instructor,
+          rating: course.rating,
+          reviews: course.reviews,
+          price: course.price,
+          originalPrice: course.originalPrice,
+          imgSrc: course.imgSrc
+        }));
       });
+
+      // Add the formatted category and courses to the newCourseDetails object
+      newCourseDetails.categories.set(categoryName, categoryCourses);
     });
 
     // Save the new document to the database
@@ -647,3 +648,4 @@ exports.addCourseDetails = async (req, res) => {
     res.status(500).json({ error: 'Failed to add course data' });
   }
 };
+
