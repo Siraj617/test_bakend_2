@@ -33,4 +33,3 @@ const courseDetailsSchema = new mongoose.Schema({
 // Create and export the CourseDetails model
 const Postcourse = mongoose.model('Postcourse', courseDetailsSchema);
 module.exports = Postcourse;
-
