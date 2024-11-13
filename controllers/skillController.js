@@ -609,8 +609,8 @@ exports.addCourseDetails = async (req, res) => {
     // Initialize a new CourseDetails document
     const newCourseDetails = new Postcourse();
 
-    // Initialize categories as an empty object if it's not already initialized
-    newCourseDetails.categories = {};
+    // Initialize newCourseDetails as an empty object
+    const categoriesData = {};
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
@@ -640,9 +640,12 @@ exports.addCourseDetails = async (req, res) => {
         }));
       });
 
-      // Add the formatted category and courses to the newCourseDetails object
-      newCourseDetails.categories[categoryName] = categoryCourses; // Use object syntax instead of Map.set
+      // Add the formatted category and courses directly to the categoriesData object
+      categoriesData[categoryName] = categoryCourses;
     });
+
+    // Set the formatted categories data directly to the newCourseDetails object
+    newCourseDetails.set(categoriesData);
 
     // Save the new document to the database
     await newCourseDetails.save();
@@ -653,4 +656,3 @@ exports.addCourseDetails = async (req, res) => {
     res.status(500).json({ error: 'Failed to add course data' });
   }
 };
-
