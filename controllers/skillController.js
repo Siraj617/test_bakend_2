@@ -607,9 +607,7 @@ exports.addCourseDetails = async (req, res) => {
     const courseData = req.body; // Expecting data in the specified format
 
     // Initialize a new CourseDetails document
-    const newCourseDetails = new Postcourse({
-      categories: new Map() // Initialize the categories as an empty Map
-    });
+    const newCourseDetails = new Postcourse();
 
     // Loop through each category in the payload
     Object.keys(courseData).forEach(categoryName => {
@@ -633,12 +631,14 @@ exports.addCourseDetails = async (req, res) => {
           reviews: course.reviews,
           price: course.price,
           originalPrice: course.originalPrice,
-          imgSrc: course.imgSrc
+          imgSrc: course.imgSrc,
+          documentURL: course.documentURL || "", // Add the new documentURL field
+          createdDate: new Date() // Add the createdDate field with the current date
         }));
       });
 
       // Add the formatted category and courses to the newCourseDetails object
-      newCourseDetails.categories.set(categoryName, categoryCourses);
+      newCourseDetails.categories[categoryName] = categoryCourses;
     });
 
     // Save the new document to the database
