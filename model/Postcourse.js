@@ -15,14 +15,11 @@ const courseSchema = new mongoose.Schema({
 
 // Define the main course details schema
 const courseDetailsSchema = new mongoose.Schema({
-  categories: {
-    type: Map,  // Use Map instead of Object for categories
-    of: {
-      subcategories: { type: [String], default: [] },
-      courses: { type: Object, required: true }  // Store courses under subcategories as objects
-    },
-    required: true
-  }
+  WebDevelopment: {
+    subcategories: { type: [String], default: [] },
+    courses: { type: Object, required: true }
+  },
+  createdDate: { type: Date, default: Date.now }  // Make sure createdDate is included here
 });
 
 // Create and export the CourseDetails model
