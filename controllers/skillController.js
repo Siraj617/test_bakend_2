@@ -596,6 +596,7 @@ exports.getCourseDetails = async (req, res) => {
 
     // Send the final structured JSON as a response
     console.log(finalStructure)
+    console.log(finalStructure.categories)
     res.json(finalStructure);
   } catch (error) {
     console.error('Error fetching and structuring course data:', error);
