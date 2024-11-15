@@ -514,11 +514,75 @@ exports.CheckBookingID = async (req, res) => {
 };
 
 
+
+exports.addCourseDetails = async (req, res) => {
+  try {
+    const courseData = req.body;
+
+    // Initialize a new CourseDetails document
+    const newCourseDetails = new Postcourse();
+    newCourseDetails.categories = {};
+
+    // Loop through each category in the payload
+    Object.keys(courseData).forEach(categoryName => {
+      const categoryData = courseData[categoryName] || {}; // Default to an empty object if undefined
+
+      // Only proceed if subcategories or courses exist in categoryData
+      const hasSubcategories = Array.isArray(categoryData.subcategories);
+      const hasCourses = categoryData.courses && typeof categoryData.courses === 'object';
+
+      if ((hasSubcategories && categoryData.subcategories.length > 0) || (hasCourses && Object.keys(categoryData.courses).length > 0)) {
+        const categoryCourses = {
+          subcategories: hasSubcategories ? categoryData.subcategories : [],
+          courses: {}
+        };
+
+        // Process each subcategory and its courses if available
+        if (hasSubcategories) {
+          categoryData.subcategories.forEach(subcategoryName => {
+            const coursesInSubcategory = categoryData.courses?.[subcategoryName] || [];
+
+            // Only add subcategory if courses exist for it
+            if (coursesInSubcategory.length > 0) {
+              categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
+                courseId: new mongoose.Types.ObjectId(), // Automatically generate unique courseId
+                title: course.title,
+                instructor: course.instructor,
+                rating: course.rating,
+                reviews: course.reviews,
+                price: course.price,
+                originalPrice: course.originalPrice,
+                imgSrc: course.imgSrc,
+                documentURL: course.documentUrl,  // Document URL field
+                createdDate: new Date() // Automatically set the created date to current date
+              }));
+            }
+          });
+        }
+
+        // Only add to categories if there's valid data in the category
+        newCourseDetails.categories[categoryName] = categoryCourses;
+      }
+    });
+
+    // Save the new document to the database
+    await newCourseDetails.save();
+    console.log('Course Details Saved:', newCourseDetails);
+
+    res.status(201).json({ message: 'Course details added successfully' });
+  } catch (error) {
+    console.error('Error adding course data:', error);
+    res.status(500).json({ error: 'Failed to add course data' });
+  }
+};
+
+
+// Controller to fetch the course details
 exports.getCourseDetails = async (req, res) => {
   console.log('hello');
   try {
     // Fetch all documents in the CourseDetails collection
-    const courseDetails = await CourseDetails.find(); // Fetching all documents
+    const courseDetails = await Postcourse.find(); // Fetching all documents
 
     // Debugging: Check what courseDetails contains
     console.log('Fetched course details:', courseDetails);
@@ -535,14 +599,17 @@ exports.getCourseDetails = async (req, res) => {
 
     // Loop through each document (course data) returned by the find query
     courseDetails.forEach(document => {
-      // Access the actual data using the _doc field
-      const data = document._doc;
+      // Access the `categories` field within each document
+      const data = document._doc.categories;
+
+      // Ensure `data` is valid
+      if (!data || typeof data !== 'object') {
+        console.error('Invalid categories data');
+        return;
+      }
 
       // Loop through each category (e.g., 'Web Development', 'Data Science')
       Object.keys(data).forEach(categoryName => {
-        // Skip the _id field
-        if (categoryName === '_id') return;
-
         const categoryData = data[categoryName];
 
         // Log categoryData to check its structure
@@ -577,13 +644,16 @@ exports.getCourseDetails = async (req, res) => {
               // Add each subcategory with its courses array
               finalStructure.categories[categoryName].courses[subcategoryName] = courses.map(course => {
                 return {
+                  courseId: course.courseId,         // Added course ID
                   title: course.title,
                   instructor: course.instructor,
                   rating: course.rating,
                   reviews: course.reviews,
                   price: course.price,
                   originalPrice: course.originalPrice,
-                  imgSrc: course.imgSrc
+                  imgSrc: course.imgSrc,
+                  documentUrl: course.documentURL,   // Added document URL
+                  createdDate: course.createdDate    // Added created date
                 };
               });
             }
@@ -596,62 +666,9 @@ exports.getCourseDetails = async (req, res) => {
 
     // Send the final structured JSON as a response
     console.log(finalStructure)
-    console.log(finalStructure.categories)
     res.json(finalStructure);
   } catch (error) {
     console.error('Error fetching and structuring course data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-exports.addCourseDetails = async (req, res) => {
-  try {
-    const courseData = req.body; // Expecting data in the specified format
-
-    // Initialize a new CourseDetails document
-    const newCourseDetails = new Postcourse();
-
-    // Initialize categories as an empty object if it's not already initialized
-    newCourseDetails.categories = {};
-
-    // Loop through each category in the payload
-    Object.keys(courseData).forEach(categoryName => {
-      const categoryData = courseData[categoryName];
-
-      // Initialize subcategories and courses under each category
-      const categoryCourses = {
-        subcategories: categoryData.subcategories || [],
-        courses: {} // Initialize an empty object for courses grouped by subcategory
-      };
-
-      // Process each subcategory and its courses
-      categoryData.subcategories.forEach(subcategoryName => {
-        const coursesInSubcategory = categoryData.courses[subcategoryName] || [];
-
-        // Store courses under their respective subcategory
-        categoryCourses.courses[subcategoryName] = coursesInSubcategory.map(course => ({
-          title: course.title,
-          instructor: course.instructor,
-          rating: course.rating,
-          reviews: course.reviews,
-          price: course.price,
-          originalPrice: course.originalPrice,
-          imgSrc: course.imgSrc,
-          documentURL: course.documentURL, // New field for document URL
-          createdDate: new Date() // Automatically set the created date to current date
-        }));
-      });
-
-      // Add the formatted category and courses to the newCourseDetails object
-      newCourseDetails.categories[categoryName] = categoryCourses; // Use object syntax instead of Map.set
-    });
-
-    // Save the new document to the database
-    await newCourseDetails.save();
-
-    res.status(201).json({ message: 'Course details added successfully' });
-  } catch (error) {
-    console.error('Error adding course data:', error);
-    res.status(500).json({ error: 'Failed to add course data' });
   }
 };
